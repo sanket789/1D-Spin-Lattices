@@ -6,22 +6,22 @@ for the transverse Ising model.
 
 @author: Ashley Milsted
 """
-from __future__ import absolute_import, division, print_function
+#from __future__ import absolute_import, division, print_function
 
 import copy
 import scipy as sp
 import scipy.linalg as la
 import scipy.special as spe
 import evoMPS.tdvp_uniform as tdvp
-
+import evoMPS.matmul as matmul
 """
 First, we set up some global variables to be used as parameters.
 """
 
-bond_dim = 8                 #The maximum bond dimension
+bond_dim = 32                 #The maximum bond dimension
 
 J = 1.00                      #Interaction factor
-h = 0.9                      #Transverse field factor
+h = 0.50                     #Transverse field factor
 
 tol_im = 1E-10                #Ground state tolerance (norm of projected evolution vector)
 
@@ -67,7 +67,10 @@ def get_ham(J, h):
 
 lam = J / h
 print("Exact energy = ", -h * 2 / sp.pi * (1 + lam) * spe.ellipe((4 * lam / (1 + lam)**2)))
-
+def contract_uni(A,B):
+    M = sp.dot(matmul.H(A[0][0]),B[0][0]) + sp.dot(matmul.H(A[0][1]),B[0][1])
+    tr = sp.trace(matmul.H(A[0][0]))*sp.trace(B[0][0]) + sp.trace(matmul.H(A[0][1]))*sp.trace(B[0][1])
+    return tr.real
 """
 Now we are ready to create an instance of the evoMPS class.
 """
@@ -175,7 +178,11 @@ if __name__ == '__main__':
             s.update()
             s.save_state(grnd_fname)
             break
-
+    norm = contract_uni(sp.asarray(s.A),sp.asarray(s.A))
+    print "norm of ground state is = ",norm
+    print s.A[0].shape
+    print sp.linalg.norm(s.A[0])
+'''
     """
     Find excitations once we have the ground state.
     """
@@ -239,3 +246,4 @@ if __name__ == '__main__':
         plt.legend()
 
         plt.show()
+'''

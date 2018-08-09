@@ -8,29 +8,30 @@ for the transverse Ising model.
 """
 from __future__ import absolute_import, division, print_function
 import scipy as sp
+
 import evoMPS.tdvp_gen as tdvp
 
 """
 First, we set up some global variables to be used as parameters.
 """
 
-N = 20                        #The length of the finite spin chain.
+N = 8                        #The length of the finite spin chain.
 bond_dim = 32                 #The maximum bond dimension
 
 J = 1.00                      #Interaction factor
 h = 0.50                      #Transverse field factor
 h_quench = -0.5               #Field factor after quench
 
-tol_im = 1E-10                #Ground state tolerance (norm of projected evolution vector)
+tol_im = 1E-9                #Ground state tolerance (norm of projected evolution vector)
 
-step = 0.08                   #Imaginary time step size
-realstep = 0.01               #Real time step size
-real_steps = 300              #Number of real time steps to simulate
+step = 0.015625                  #Imaginary time step size
+realstep = 0.003125               #Real time step size
+real_steps = 100              #Number of real time steps to simulate
 
 load_saved_ground = True     #Whether to load a saved ground state
 
 auto_truncate = True          #Whether to reduce the bond-dimension if any Schmidt coefficients fall below a tolerance.
-zero_tol = 1E-12              #Zero-tolerance for the Schmidt coefficients squared (right canonical form)
+zero_tol = 1E-20              #Zero-tolerance for the Schmidt coefficients squared (right canonical form)
 
 plot_results = True
 
@@ -61,8 +62,7 @@ length N and the parameters J and h.
 """
 def get_ham(N, J, h):
     ham = -J * (sp.kron(Sx, Sx) + h * sp.kron(Sz, sp.eye(2))).reshape(2, 2, 2, 2)
-    ham_end = ham + h * sp.kron(sp.eye(2), Sz).reshape(2, 2, 2, 2)
-    return [None] + [ham] * (N - 2) + [ham_end]
+    return [ham] * N
 
 """
 The bond dimension for each site is given as a vector, length N + 1.
