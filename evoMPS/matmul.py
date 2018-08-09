@@ -9,7 +9,7 @@ TODO:
     Look into using e.g. sp.linalg.fblas.zgemm._cpointer from cython? Or
     link it to blas at compile time using distutils...
 """
-from __future__ import absolute_import, division, print_function
+#from __future__ import absolute_import, division, print_function
 
 import scipy as sp
 import scipy.linalg as la
@@ -469,3 +469,37 @@ def invtr(A, overwrite=False, lower=False):
                                                                     % -info)       
                                                                     
     return inv_A
+
+'''
+                    MY FUNCTIONS
+==============================================================================================================================
+******************************************************************************************************************************
+
+    Function to multiply three matrices
+'''
+def mult_3(A,B,C):
+    return sp.dot(A,sp.dot(B,C))
+'''
+    Function to evaluate contractions. Ref: Eq 93 from U. Schollowk
+    Input:
+        A : bra vector MPS
+        B : ket vector MPS
+    Output:
+        < psi[A] | phi[B] >
+'''
+def contract(A,B):
+    M0 = sp.dot(H(A[1][0]),B[1][0]) + sp.dot(H(A[1][1]),B[1][1])
+    N = sp.shape(A)[0]
+    for n in range(2,N):
+        Ml = A[n]
+        Mr = B[n]
+        out = mult_3(H(Ml[0]),M0,Mr[0]) + mult_3(H(Ml[1]),M0,Mr[1])
+        M0 = out
+    return sp.asscalar(M0)
+
+def calc_r_seq(x,A):
+    q = sp.shape(A)[0]
+    out = sp.zeros((sp.shape(A)[1],sp.shape(A)[1]))
+    for i in range(q):
+        out = out + mult_3(A[i],x,H(A[i]))
+    return out

@@ -5,7 +5,7 @@ Created on Tue Jan 20 17:43:17 2015
 @author: ash
 """
 from __future__ import absolute_import, division, print_function
-
+import scipy as sp
 import numpy as np
 import scipy.linalg as la
 from . import matmul as mm
@@ -147,6 +147,10 @@ def eps_r_noop(x, A1, A2):
     res : ndarray
         The resulting matrix.
     """
+    #if (sp.isnan(x).any()) == True:
+    #    print("True")
+    #else: 
+    #    print("false")
     out = np.zeros((A1.shape[1], A2.shape[1]), dtype=A1.dtype)
     return eps_r_noop_inplace(x, A1, A2, out)
     
@@ -180,10 +184,14 @@ def eps_r_noop_inplace(x, A1, A2, out):
     out_s = np.empty_like(out, order='C')
     
     for s in range(A1.shape[0]):
+        #if (sp.isnan(x).any()) == True:
+        #    print("True")
+        
         tmp_A1xs = mm.dot_inplace(A1[s], x, tmp_A1xs)
         tmp_A2sh[:] = A2[s].T
         np.conjugate(tmp_A2sh, out=tmp_A2sh)
         out_s = np.dot(tmp_A1xs, tmp_A2sh, out=out_s)
+        
         out += out_s
         
     return out
@@ -505,3 +513,5 @@ def calc_C_func_op_AA(op, AA):
                     if h_nn_stuv != 0:
                         C[s, t] += h_nn_stuv * AAuv
     return C
+
+

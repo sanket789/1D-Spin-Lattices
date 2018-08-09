@@ -614,7 +614,14 @@ class EvoMPS_TDVP_Generic(EvoMPS_MPS_Generic):
         
         dD_maxes = sp.repeat([dD_max], len(self.D))
         if D_max > 0:
-            dD_maxes[self.D + dD_maxes > D_max] = 0
+            '''
+                Changed this block
+            '''
+            for i in range(len(self.D)):
+                if self.D[i] + dD_max > D_max:
+                    dD_maxes[i] = D_max - self.D[i]
+
+            #dD_maxes[self.D + dD_maxes < D_max] = 0
         
         for n in range(1, self.N):
             if not Y[n] is None and dD_maxes[n] > 0:
@@ -692,6 +699,7 @@ class EvoMPS_TDVP_Generic(EvoMPS_MPS_Generic):
     def _calc_B_r_n(self, n, set_eta=True, l_s_m1=None, l_si_m1=None, r_s=None, r_si=None, Vrh=None):
         if self.q[n] * self.D[n] - self.D[n - 1] > 0:
             if l_s_m1 is None:
+                #print(n,"n",self.r[n])
                 l_s_m1, l_si_m1, r_s, r_si = tm.calc_l_r_roots(self.l[n - 1], self.r[n], 
                                                            zero_tol=self.zero_tol,
                                                            sanity_checks=self.sanity_checks,
@@ -930,18 +938,27 @@ class EvoMPS_TDVP_Generic(EvoMPS_MPS_Generic):
         B_fin = self.calc_B()
         
         for n in range(1, self.N + 1):
+
             if not B_fin[n] is None:
                 self.A[n] += -dtau/2 * B_fin[n]
         self.update(restore_CF=False, normalize=False)
         B = self.calc_B(set_eta=False) #k2
         
+
         for n in range(1, self.N + 1):
             if not B[n] is None:
                 self.A[n] = A0[n] - dtau/2 * B[n]
                 B_fin[n] += 2 * B[n]
+
         self.update(restore_CF=False, normalize=False)
+
+        #for i in range(1,self.N+1):
+        #    if (sp.isnan(self.A[i]).any()) == True:
+        #        print("True",i)
+
         B = self.calc_B(set_eta=False) #k3
-            
+        
+
         for n in range(1, self.N + 1):
             if not B[n] is None:
                 self.A[n] = A0[n] - dtau * B[n]
@@ -952,7 +969,7 @@ class EvoMPS_TDVP_Generic(EvoMPS_MPS_Generic):
             B = self.calc_B_n(n, set_eta=False) #k4
             if not B is None:
                 B_fin[n] += B
-
+        
         for n in range(1, self.N + 1):
             if not B_fin[n] is None:
                 self.A[n] = A0[n] - dtau / 6 * B_fin[n]

@@ -212,6 +212,7 @@ def herm_sqrt_inv(x, zero_tol=1E-15, sanity_checks=False, return_rank=False, sc_
             ev = x.diag #simple_diag_matrix
             EV = None
         except AttributeError:
+            #print(x)
             ev, EV = la.eigh(x)
         
         zeros = ev <= zero_tol #throw away negative results too!
