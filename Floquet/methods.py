@@ -11,15 +11,12 @@ def getHam_Efield_OBC(L,J,A,w,t,sanity_checks=False):
 	return ham
 
 def getHam_Bfield_PBC(L,J,A,w,t,mu,a=1.0,sanity_checks=False):
-	try:
-		phi = 1j*a*A*getPhi(w,t,L,"B_FIELD")
-	except ZeroDivisionError as ze:
-		phi = 1j*a*A
-
-	HH_hop = np.diag(-J*np.exp(-phi)*np.ones(L-1),1) + np.diag(-J*np.exp(phi)*np.ones(L-1),-1)
+	
+	phi = getPhi(w,t,L,"B_FIELD",A=A)
+	HH_hop = np.diag(-J*np.exp(-1j*phi)*np.ones(L-1),1) + np.diag(-J*np.exp(1j*phi)*np.ones(L-1),-1)
 	ham = HH_hop + np.diag(mu*np.ones(L))
-	ham[0,-1] = -J*np.exp(phi)
-	ham[-1,0] = -J*np.exp(-phi) 
+	ham[0,-1] = -J*np.exp(1j*phi)
+	ham[-1,0] = -J*np.exp(-1j*phi) 
 
 	if sanity_checks == True:
 		if not np.allclose(np.conj(ham.T),ham):
@@ -74,26 +71,36 @@ def distance(A,B):
 	return d
 
 
-def getPhi(w,t,L,s):
+def getPhi(w,t,L,s,A=0.):
 	
 	if s is "FLUX":
 		phi = np.sin(w*t)/(L)	#phase
 	elif s is "B_FIELD":
-		phi = np.sin(w*t)/w
+		try:
+			phi = A*np.sin(w*t)/w
+		except ZeroDivisionError as ze:
+			phi = A
 	else:
 		phi = 1.0
 	return phi
 
 
-def getCurrent(CC,w,t,J,ss):
+def getCurrent(CC,w,t,J,ss,A=0.):
+	'''
+		Input:	
+			CC 	:	Corelation matrix
+			w 	:	drive frequency (rad/sec)
+			t 	:	time in seconds
+			J 	:	Hopping component
+			A 	:	Electric field amplitude (default 0.)
+			ss 	:	Phi chosing string ("FLUX" for flux method, "B_FIELD" for vector potential)
+	'''
 	L = np.shape(CC)[0]
-	j = np.zeros(L)
-	phi = getPhi(w,t,L,ss)
-	j[0] = 1j*J*(np.exp(1j*phi)*CC[0,L] - np.exp(-1j*phi)*C[L,0])
-	for i in range(1,L):
-		j[i] = 1j*J*(np.exp(1j*phi)*CC[i,i-1] - np.exp(-1j*phi)*CC[n-1,n])
+	j = np.zeros(L,dtype=complex)
+	phi = getPhi(w,t,L,ss,A=A)
+	j[0] = 1j*J*(np.exp(1j*phi)*CC[0,L-1] - np.exp(-1j*phi)*CC[L-1,0])
+	for n in range(1,L):
+		j[n] = 1j*J*(np.exp(1j*phi)*CC[n,n-1] - np.exp(-1j*phi)*CC[n-1,n])
 
 	return j
 
-if __name__=='__main__':
-	print(getPhi(3.14,1.,10,"FLUX"))

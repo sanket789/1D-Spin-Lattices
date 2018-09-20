@@ -12,12 +12,13 @@ import math
 
 #parameters for simulation
 
-L = 256			#Length of chain. sites from 0 , 1 , ... , L-1
+L = 100			#Length of chain. sites from 0 , 1 , ... , L-1
 dt = 0.1 		#time step
-tf = 200. 		#total time
+tf = 100. 		#total time
 
 #Paramteres for Hamiltonian 
-A = 0.5			#Amplitude of Electric field (in V per lattice constant)
+A = 0.0			#Amplitude of Electric field (in V per lattice constant)
+
 w = np.pi 		#Frequency of time dep field
 J = 0.5			#hopping parameter for TB chain
 mu0 = 1. 		#chemical potential
@@ -37,7 +38,7 @@ l0 = L//2 - 5
 l1 = L//2 + 5
 
 #create filename for storage
-fname = initState+"VecP_N_%d_J_%g_A%g_w%g_mu%g_tf_%g_dt_%g_"%(L,J,A,w,mu0,tf,dt)
+fname = initState+"FLUX_N_%d_J_%g_w_%g_mu0_%g_s_%g_al_%g_tf_%g_dt_%g_"%(L,J,w,mu0,sigma,alpha,tf,dt)
 if save_data == True:
 	mydir = os.path.join(os.getcwd(), "Logs/","N_%g_w_%g"%(L,w),datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
 	os.makedirs(mydir)
@@ -50,9 +51,9 @@ if save_data == True:
 CC_0 = np.zeros((L,L))
 print('--------------  Simulation for  ----------------')
 print("Number of sites = ", L)
-print("frequency of AC electric field = ",w)
-print("Amplitude of AC electric field = ",A)
-print("Chemical potential = ",mu0)
+print("frequency of Drive = ",w)
+#print("Amplitude of AC electric field = ",A)
+print("Chemical potential = %gcos(2pi*n*%g + %g)"%(mu0,sigma,alpha))
 
 if initState == "ALT":
 	print("Using half filled state with alternate occupancy | 1 0 1 0 1 ...>")
@@ -92,13 +93,14 @@ S = []					#entropy time series
 eigCC = []				#spectrum of subsystem density matrix
 nbar = []				#average occupation in subsystem
 II = []					#even-odd diff in subsystem
+JJ_charge = []
 index_o = range(0,L,2)	#odd indices
 index_e = range(1,L,2)	#evevn indices
 
 for i in range(N):
 	t = T[i]
 	if loaded == False:
-		HH = func.getHam_Bfield_PBC(L,J,A,w,t,mu0)				#get Hamiltonian
+		HH = func.getHam_flux_PBC(L,J,w,t,mu0,sigma,alpha,sanity_checks=True)			#get Hamiltonian
 		
 		eps , DD = np.linalg.eigh(HH)							#Find eigen values and eigenvevtors
 		EE = np.diag(np.exp(-1j*eps*dt))						#exp(-i_epsk_t)
@@ -113,16 +115,17 @@ for i in range(N):
 	S.append(s)
 	
 	diag = CC_curr.diagonal().real
+
 	#Caluculate nbar 
-	
 	nbar.append(sum(diag[l0:l1]).real/(l1-l0))
 	
 	#Calculate I
-	
 	n_o = sum(diag[index_o])
 	n_e = sum(diag[index_e])
 	II.append((n_o + n_e)/(n_o - n_e))
 	
+	#Calculate charge current
+	JJ_charge.append(func.getCurrent(CC_curr,w,t,J,"FLUX"))
 	
 	if loaded == False:
 		CC_curr = CC_next.copy()
@@ -142,7 +145,13 @@ if plot_results == True:
 	plt.ylabel("local occupation number ")
 	plt.title("Local occupation number for N = %d sites"%(L),loc='right')
 	plt.show()
-		
+	
+	plt.plot(range(L),JJ_charge[-1])
+
+	plt.xlabel('Sites')
+	plt.ylabel("Final current ")
+	plt.title("curent at time %g for N = %d sites"%(tf,L),loc='right')
+	plt.show()
 		
 if save_data == True:
 	
