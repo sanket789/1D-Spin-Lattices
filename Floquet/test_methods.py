@@ -9,7 +9,7 @@ class TestEfieldHam_OBC(unittest.TestCase):
 	A = 5.
 	w = np.pi/8.
 	t  = 5.5
-	@data(10,5,100,256)
+	@data(10,50,100,256)
 	def testHermitian(self,value):
 		ham = f.getHam_Efield_OBC(value,self.J,self.A,self.w,self.t)
 
@@ -19,7 +19,7 @@ class TestEfieldHam_OBC(unittest.TestCase):
 
 		self.assertTrue(np.allclose(ham,hamdag))
 		self.assertEqual(flag,0)
-		self.assertTrue(np.allclose(np.eye(2*value,2*value),np.dot(DD,np.conj(DD.T))))
+		self.assertTrue(np.allclose(np.eye(value,value),np.dot(DD,np.conj(DD.T))))
 @ddt
 class Testent(unittest.TestCase):
 	@data(1,2,3,5.5,100.86)
@@ -52,7 +52,7 @@ class TestDistance(unittest.TestCase):
 class TestBfieldHam(unittest.TestCase):
 
 	def testHermitian(self):
-		L = 2
+		L = 4
 		J = 0.5
 		A = 0.3
 		w = 2.3
@@ -64,6 +64,29 @@ class TestBfieldHam(unittest.TestCase):
 		ep = -J*np.exp(phi)
 		en = -J*np.exp(-phi)
 		expected = np.array([[mu,en,0.,ep],[ep,mu,en,0.],[0.,ep,mu,en],[en,0.,ep,mu]])
+		
+		self.assertTrue(np.allclose(result,expected))
+
+class TestFluxHam(unittest.TestCase):
+
+	def testElements(self):
+		L = 4
+		J = 0.9
+		w = 2.3
+		t = 5.6
+		mu0 = 3.1
+		sigma = np.sqrt(7)
+		alpha = 0.45
+
+		result = f.getHam_flux_PBC(L,J,w,t,mu0,sigma,alpha,sanity_checks=False)
+		phi = np.sin(w*t)/L
+		ep = -J*np.exp(1j*phi)
+		en = -J*np.exp(-1j*phi)
+
+		expected = np.array([[2.791386017,	en,	0.0,	ep],
+							[ep,	-0.6311001728,	en,	0.0],
+							[0.0,	ep,	-2.022491166,	en],
+							[en,	0.0,	ep,	3.095182916]])
 		
 		self.assertTrue(np.allclose(result,expected))
 
