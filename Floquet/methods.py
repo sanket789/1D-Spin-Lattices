@@ -23,9 +23,9 @@ def getHam_Bfield_PBC(L,J,A,w,t,mu,a=1.0,sanity_checks=False):
 			log.warning("Sanity Fail: Hamiltonian is not Hermitian")
 	return ham
 
-def getHam_flux_PBC(L,J,w,t,mu0,sigma,alpha,sanity_checks=False):
+def getHam_flux_PBC(L,J,w,t,mu0,sigma,alpha,A=1.,sanity_checks=False):
 
-	phi = getPhi(w,t,L,"FLUX")
+	phi = getPhi(w,t,L,"FLUX",A=A)
 	mu_i = [mu0*np.cos(2*np.pi*sigma*index + alpha) for index in range(0,L)]	#site dependent quasi-periodic chemical potential
 	HH_hop = np.diag(-J*np.exp(-1j*phi)*np.ones(L-1),1) + np.diag(-J*np.exp(1j*phi)*np.ones(L-1),-1)	#hopping terms
 	ham = HH_hop + np.diag(mu_i)	#adding off-diagonal and diagonal part
@@ -71,7 +71,7 @@ def distance(A,B):
 	return d
 
 
-def getPhi(w,t,L,s,A=0.):
+def getPhi(w,t,L,s,A=1.):
 	
 	if s is "FLUX":
 		phi = np.sin(w*t)/(L)	#phase
@@ -102,5 +102,5 @@ def getCurrent(CC,w,t,J,ss,A=0.):
 	for n in range(1,L):
 		j[n] = 1j*J*(np.exp(1j*phi)*CC[n,n-1] - np.exp(-1j*phi)*CC[n-1,n])
 
-	return j
+	return j.real
 

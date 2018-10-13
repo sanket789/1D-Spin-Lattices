@@ -90,6 +90,18 @@ class TestFluxHam(unittest.TestCase):
 		
 		self.assertTrue(np.allclose(result,expected))
 
+class TestCurrent(unittest.TestCase):
+	def testInitialMatrix(self):
+		CC = np.array([[1.0,0.0,0.0,0.0],[0.0,1.,0.,0.],[0.,0.,0.,0.],[0.,0.,0.,0.]])
+		w = np.pi 
+		t = 0.1
+		J = 0.2
+		ss = "FLUX"
 
+		phi = np.sin(0.1*np.pi)*0.25
+
+		expected = np.array([0.,0.,0.,0.])
+		result = f.getCurrent(CC,w,t,J,ss,A=0.0)
+		self.assertTrue(np.allclose(result,expected))
 if __name__=='__main__':
 	unittest.main(verbosity=2)

@@ -15,7 +15,7 @@ def ent(n):
 		S = 0.
 	return S
 
-isAC = True
+isAC = False
 
 L = 2
 J = 0.5
@@ -23,9 +23,9 @@ a = 1.0
 F = 0.5
 w = 0.21
 tf = 10.
-dt = 1.
+dt = 0.01
 
-Ft = a*F*np.arange(-L+0.5,L+1-0.5,1)
+Ft = 0*a*F*np.arange(-L+0.5,L+1-0.5,1)
 
 HH0 = np.diag(-J*np.ones(2*L-1),1) + np.diag(-J*np.ones(2*L-1),-1) 
 evals0 , evec0 = np.linalg.eigh(HH0)
@@ -57,6 +57,7 @@ S = np.zeros(N)
 #print np.allclose(DD,DD.T)
 CC_prev = CC_0.copy()
 ttt = []
+nbar = np.zeros((N,1))
 for i in range(N):
 	T[i] = i*dt
 	if isAC:
@@ -64,7 +65,7 @@ for i in range(N):
 		HH = HH0 + np.diag(Ft)
 		eps , DD = np.linalg.eigh(HH)
 	if math.fmod(i,N/100.) == 0:
-		print 100*i/N 
+		print (100*i/N) 
 	
 	
 	EE = np.diag(np.exp(-1j*eps*dt))	#exp(-i_epsk_t)
@@ -72,19 +73,18 @@ for i in range(N):
 	#UU = np.dot(np.conj(DD),np.dot(EE,DD))		#from paper
 	CC_t = np.dot(np.conj(UU).T, np.dot(CC_prev, UU)) 
 	NN = np.linalg.eigvals(CC_t[0:L,0:L]).real
-
+	nbar[i] = np.sum(CC_t.diagonal()).real
 	UU_eq = np.dot(np.conj(DD),DD.T)
-	print UU_eq
+	
 	CC_eq = np.dot(np.conj(UU).T, np.dot(CC_prev, UU)) 
 	
-
+	nbar[i] = np.sum(CC_eq.diagonal()).real
 	CC_prev = CC_t.copy()
 	S[i] = sum([-ent((1-n)) - ent(n) for n in NN])
 	ttt.append(CC_eq)
-plt.plot(T,S)
+plt.plot(T,nbar)
 plt.show()
-for k in range(N):
-	print ttt[k]
+
 	#print np.allclose(ttt[0],ttt[k])
 #np.save("ent_F%g_w%g_.npy"%(F,w),S)
 #np.save("Time.npy",T)
